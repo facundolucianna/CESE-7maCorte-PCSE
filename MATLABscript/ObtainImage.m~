@@ -1,0 +1,188 @@
+clear all; clc;
+filename = "./photo12.log";
+photo_raw = csvread(filename);
+
+a = './';
+b = 'photo';
+img = 'photo.png';
+sp = strrep(img, '.', '_8.');
+full = fullfile(a,b,sp);
+
+bytes_per_pixel = 1;
+
+photo_raw2 = [photo_raw(1, :)];    %Impar
+byte_per_line_pre = [photo_raw(2, :)];
+
+%photo_raw5 = [photo_raw(3, :)]; %Par
+%byte_per_line_pre_6 = [photo_raw(4, :)]; 
+
+photo_raw5 = [photo_raw(1, :)];    %Impar
+byte_per_line_pre_6 = [photo_raw(2, :)];
+
+count1 = 1;
+count2 = 1;
+
+for i=1:length(byte_per_line_pre)
+    
+    if  byte_per_line_pre(i) ~= 0
+        byte_per_line_impar(count1) = byte_per_line_pre(i);
+        count1 = count1 + 1;
+    end
+
+    if  byte_per_line_pre_6(i) ~= 0
+        byte_per_line_par(count2) = byte_per_line_pre_6(i);
+        count2 = count2 + 1;
+    end
+    
+end    
+
+clear photo_raw byte_per_line_pre byte_per_line_pre_6
+
+count = 1;
+numer_line = length(byte_per_line_impar);
+max_bytes_per_line = max(byte_per_line_par);
+max_pixels_per_line = max(byte_per_line_par) / bytes_per_pixel;
+
+if rem(max_pixels_per_line, byte_per_line_par) ~= 0
+    max_pixels_per_line = round(byte_per_line_par - 1, 0);
+end
+
+pre_photo_impar = zeros(numer_line, max_bytes_per_line);
+pre_photo_par = zeros(numer_line, max_bytes_per_line);
+
+ for i=1:numer_line
+     
+     bytes = byte_per_line_par(i);
+     
+     for j=1:bytes
+         pre_photo_par(i,j) =  photo_raw5(j +bytes*(i - 1));
+     end 
+ end
+ 
+  for i=1:numer_line
+     
+     bytes = byte_per_line_impar(i);
+     
+     for j=1:bytes
+         pre_photo_impar(i,j) =  photo_raw2(j +bytes*(i - 1));
+     end 
+ end
+
+R = zeros(numer_line, max_pixels_per_line);
+G = zeros(numer_line, max_pixels_per_line);
+B = zeros(numer_line, max_pixels_per_line);
+B2 = zeros(numer_line, max_pixels_per_line);
+
+%Impar
+for i=1:numer_line
+         
+     bytes = byte_per_line_impar(i);
+     
+     for j=1:bytes
+            
+         str = dec2hex(pre_photo_par(i, j));
+         
+         number = hex2dec(str);
+         
+         %GG = bitshift(bitand(number, 224), -5);
+         BB2 = 255- bitand(number, 31);
+         BB = bitand(number, 31);
+         
+         %R(i,1+floor(j/bytes_per_pixel)) = RR;
+         %G(i,1+floor(j/bytes_per_pixel)) = GG;        
+         B(i,1+floor(j/bytes_per_pixel)) = BB;
+         B2(i,1+floor(j/bytes_per_pixel)) = BB2;
+         
+         
+          
+     end
+end
+ 
+%Impar
+for i=1:numer_line
+         
+     bytes = byte_per_line_impar(i);
+     
+     for j=1:bytes
+            
+         str = dec2hex(pre_photo_par(i, j));
+         
+         number = hex2dec(str);
+         
+         RR = bitshift(bitand(number, 124), -2);
+         GG = bitshift(bitand(number, 3), 2);
+
+         R(i,1+floor(j/bytes_per_pixel)) = RR;
+         G(i,1+floor(j/bytes_per_pixel)) = GG;
+       
+         
+         
+          
+     end
+ end
+
+ RGB(:,:,1) = R';
+ RGB(:,:,2) = R';
+ RGB(:,:,3) = R';
+ 
+ RGB = (RGB/255)*10;
+ 
+ RGB(:,:,1) = G';
+ RGB(:,:,2) = G';
+ RGB(:,:,3) = G';
+
+ RGB = (RGB/255)*10;
+ 
+ RGB(:,:,1) = B';
+ RGB(:,:,2) = B';
+ RGB(:,:,3) = B';
+ 
+ RGB = (RGB/255)*5;
+ 
+ RGB(:,:,1) = (B2*0.5)';
+ RGB(:,:,2) = (B2*0.5)';
+ RGB(:,:,3) = (B2*0.5)';
+ 
+ RGB = (RGB/255)*.6;
+
+RGB(:,:,1) =(R/.4)';
+RGB(:,:,2) = (G/.4)';
+RGB(:,:,3) = (B*0.1)';
+
+ RGB = (RGB/255)*2;
+ 
+ 
+
+ 
+ 
+ 
+ %  RGB(:,:,1) = G';
+%  RGB(:,:,2) = G';
+%  RGB(:,:,3) = G';
+% 
+%  RGB = (RGB/255)*5;
+%  
+%  RGB(:,:,1) = B';
+%  RGB(:,:,2) = B';
+%  RGB(:,:,3) = B';
+%  
+%  RGB = (RGB/255)*5;
+%  
+%  RGB(:,:,1) = (B2*0.5)';
+%  RGB(:,:,2) = (B2*0.5)';
+%  RGB(:,:,3) = (B2*0.5)';
+%  
+%  RGB = (RGB/255)*.6;
+% 
+% RGB(:,:,1) = R';
+% RGB(:,:,2) = G';
+% RGB(:,:,3) = (B*0.13)';
+% 
+% RGB(:,:,1) = R';
+% RGB(:,:,2) = G';
+% RGB(:,:,3) = (B2*0.07)';
+%  
+%  RGB = (RGB/255)*2;
+image(RGB);
+imwrite(RGB,full);
+     
